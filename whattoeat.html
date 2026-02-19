@@ -148,6 +148,10 @@
             }
         }
 
+        .toggle-group .toggle-btn {
+            display: inline-block; /* Make the meal filter buttons side-by-side */
+        }
+
         .toggle-btn {
             background: var(--surface-color);
             border: 1px solid var(--glass-border);
@@ -435,6 +439,7 @@
             selectWinner(candidates) {
                 const minSelectionCount = candidates.reduce((min, candidate) => Math.min(min, candidate.selectionCount), Infinity);
                 const viableCandidates = candidates.filter(candidate => candidate.selectionCount === minSelectionCount);
+                console.info('Choices: ' + viableCandidates.length + ' / ' + candidates.length);
                 const winner = viableCandidates[Math.floor(Math.random() * viableCandidates.length)];
                 winner.selectionCount++;
                 return winner;
