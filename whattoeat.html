@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What To Eat (Vanilla)</title>
+    <!-- Icons via UNPKG (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Exact CSS from index.css */
+        :root {
+            --bg-color: #0d0d12;
+            --surface-color: #1a1a24;
+            --surface-hover: #262636;
+            --primary-color: #6d28d9;
+            --primary-glow: #8b5cf6;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger-color: #ef4444;
+            --border-radius: 12px;
+            --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            --glass-bg: rgba(26, 26, 36, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            --slot-height: 120px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-glow));
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(109, 40, 217, 0.4);
+            width: 100%;
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--surface-hover);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-icon {
+            background: transparent;
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-main);
+            background: var(--surface-hover);
+        }
+
+        input[type="text"] {
+            background: var(--surface-color);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 8px;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(calc(var(--slot-height) * -10));
+            }
+        }
+
+        .toggle-btn {
+            background: var(--surface-color);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toggle-btn.active {
+            background: rgba(109, 40, 217, 0.2);
+            border-color: var(--primary-color);
+            color: var(--primary-glow);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flex-row {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+
+        .center {
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gap-2 {
+            gap: 10px;
+        }
+
+        .mb-2 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- SETUP VIEW -->
+        <div id="view-setup" class="hidden flex-col flex-1 center gap-2">
+            <h1 style="font-size: 2rem;">Setup</h1>
+            <p style="color: var(--text-muted);">Enter your Google Apps Script URL.</p>
+            <input type="text" id="setup-url" placeholder="https://script.google.com/...">
+            <button class="btn-primary" onclick="app.saveSetup()">Connect</button>
+            <button class="btn-secondary" onclick="app.skipSetup()">Use Local Storage Only</button>
+        </div>
+
+        <!-- SPINNER VIEW -->
+        <div id="view-spinner" class="hidden flex-col flex-1">
+            <header class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="font-weight: 800; font-size: 1.2rem; color: var(--primary-glow);">What To Eat</div>
+                <button class="btn-icon" onclick="app.setView('editor')"><i data-lucide="settings"></i></button>
+            </header>
+
+            <main class="flex-1 flex-col center">
+                <!-- Slot Machine -->
+                <div id="slot-machine" class="glass-panel"
+                    style="width: 100%; padding: 0 24px; height: 200px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin: 20px 0;">
+                    <div
+                        style="position: absolute; top: 0; left: 0; right: 0; height: 40px; background: linear-gradient(to bottom, var(--surface-color), transparent); z-index: 10">
+                    </div>
+                    <div
+                        style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(to top, var(--surface-color), transparent); z-index: 10">
+                    </div>
+                    <h1 id="slot-text"
+                        style="font-size: 2.5rem; text-align: center; color: var(--primary-glow); text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);">
+                        ???</h1>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex-row center gap-2" style="flex-wrap: wrap; margin-top: 40px;">
+                    <button class="toggle-btn" id="filter-pizza" onclick="app.toggleFilter('pizza')">
+                        <i data-lucide="pizza" width="16"></i> Pizza Night
+                    </button>
+                    <button class="toggle-btn" id="filter-lake" onclick="app.toggleFilter('lake')">
+                        <i data-lucide="waves" width="16"></i> Lake Mode
+                    </button>
+                </div>
+            </main>
+
+            <footer style="margin-top: auto; padding-bottom: 20px;">
+                <button id="btn-spin" class="btn-primary" onclick="app.spin()">SPIN THE WHEEL</button>
+            </footer>
+        </div>
+
+        <!-- EDITOR VIEW -->
+        <div id="view-editor" class="glass-panel hidden flex-col" style="height: 100%; overflow: hidden;">
+            <div
+                style="padding: 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="font-size: 1.2rem;">Edit Meals</h2>
+                    <span id="conn-status" style="font-size: 0.7rem; color: var(--text-muted);">○ Local</span>
+                </div>
+                <button class="btn-icon" onclick="app.setView('spinner')"><i data-lucide="x"></i></button>
+            </div>
+
+            <div id="meal-list" style="flex: 1; overflow-y: auto; padding: 10px;">
+                <!-- Meals injected here -->
+            </div>
+
+            <form onsubmit="app.addMeal(event)"
+                style="padding: 20px; border-top: 1px solid var(--glass-border); display: flex; gap: 10px;">
+                <input type="text" id="new-meal-name" placeholder="New meal name..." autocomplete="off">
+                <button type="submit" class="btn-primary" style="width: auto; padding: 0 16px;">
+                    <i data-lucide="plus"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- APP LOGIC ---
+        const app = {
+            data: {
+                meals: [],
+                filters: { pizza: false, lake: false },
+                apiUrl: localStorage.getItem('wte-api-url') || "",
+                isSpinning: false,
+                editingId: null // ID of meal currently being edited
+            },
+
+            init() {
+                if (!this.data.apiUrl && !localStorage.getItem('wte-meals')) {
+                    this.setView('setup');
+                } else {
+                    this.fetchMeals();
+                    this.setView('spinner');
+                }
+                lucide.createIcons();
+            },
+
+            // --- UTILS ---I
+            generateUUID() {
+                if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                    try { return crypto.randomUUID(); } catch (e) { }
+                }
+                // Fallback for insecure contexts or older browsers
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            },
+
+            // --- VIEW MANAGEMENT ---
+            setView(viewName) {
+                document.querySelectorAll('#app > div').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`view-${viewName}`).classList.remove('hidden');
+                if (viewName === 'editor') this.renderMealList();
+            },
+
+            // --- DATA ---
+            async fetchMeals() {
+                // Optimistic load
+                const local = localStorage.getItem('wte-meals');
+                if (local) this.data.meals = JSON.parse(local).map(meal => ({ ...meal, selectionCount: 0 }));
+
+                if (this.data.apiUrl) {
+                    try {
+                        const res = await fetch(this.data.apiUrl);
+                        const data = await res.json();
+                        this.data.meals = data.map(m => ({ ...m, id: m.id || this.generateUUID(), selectionCount: 0 }));
+                        localStorage.setItem('wte-meals', JSON.stringify(this.data.meals));
+                    } catch (e) { console.error(e); }
+                }
+                this.renderMealList();
+            },
+
+            async saveMeals() {
+                localStorage.setItem('wte-meals', JSON.stringify(this.data.meals.map(meal => {
+                    // Remove selectionCount before saving to local storage
+                    const { selectionCount, ...rest } = meal;
+                    return rest;
+                })));
+                this.renderMealList();
+
+                if (this.data.apiUrl) {
+                    document.getElementById('conn-status').textContent = "Saving...";
+                    try {
+                        await fetch(this.data.apiUrl, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'text/plain' },
+                            body: JSON.stringify(this.data.meals.map(meal => {
+                                // Remove selectionCount before sending to the API
+                                const { selectionCount, ...rest } = meal;
+                                return rest;
+                            }))
+                        });
+                        setTimeout(() => this.updateConnStatus(), 500);
+                    } catch (e) { console.error(e); }
+                }
+            },
+
+            saveSetup() {
+                const url = document.getElementById('setup-url').value.trim();
+                if (url) {
+                    this.data.apiUrl = url;
+                    localStorage.setItem('wte-api-url', url);
+                    this.fetchMeals();
+                    this.setView('spinner');
+                    this.updateConnStatus();
+                }
+            },
+
+            skipSetup() {
+                this.data.apiUrl = "";
+                localStorage.removeItem('wte-api-url');
+                this.setView('spinner');
+            },
+
+            updateConnStatus() {
+                const el = document.getElementById('conn-status');
+                if (this.data.apiUrl) {
+                    el.textContent = "● Connected";
+                    el.style.color = "var(--secondary-color)";
+                } else {
+                    el.textContent = "○ Local Only";
+                    el.style.color = "var(--text-muted)";
+                }
+            },
+
+            // --- SPINNER LOGIC ---
+            toggleFilter(key) {
+                this.data.filters[key] = !this.data.filters[key];
+                const btn = document.getElementById(`filter-${key}`);
+                this.data.filters[key] ? btn.classList.add('active') : btn.classList.remove('active');
+            },
+
+            spin() {
+                if (this.data.isSpinning) return;
+
+                const candidates = this.data.meals.filter(m => {
+                    if (this.data.filters.pizza != m.isPizza) return false;
+                    if (this.data.filters.lake && !m.isLake) return false;
+                    if (!this.data.filters.lake && !m.isHome) return false;
+                    return true;
+                });
+
+                if (candidates.length === 0) {
+                    document.getElementById('slot-text').innerText = "None found!";
+                    return;
+                }
+
+                this.data.isSpinning = true;
+                const slotText = document.getElementById('slot-text');
+                const btn = document.getElementById('btn-spin');
+                btn.disabled = true;
+                btn.innerText = "SPINNING...";
+                slotText.style.color = "var(--text-muted)";
+                slotText.style.textShadow = "none";
+
+                let interval = setInterval(() => {
+                    const random = candidates[Math.floor(Math.random() * candidates.length)];
+                    slotText.innerText = random.name;
+                }, 50);
+
+                setTimeout(() => {
+                    clearInterval(interval);
+                    const winner = this.selectWinner(candidates); // New method to select the winner
+                    slotText.innerText = winner.name;
+                    this.data.isSpinning = false;
+
+                    btn.disabled = false;
+                    btn.innerText = "SPIN AGAIN";
+                    slotText.style.color = "var(--primary-glow)";
+                    slotText.style.textShadow = "0 0 20px rgba(139, 92, 246, 0.5)";
+                }, 2000);
+            },
+
+            selectWinner(candidates) {
+                const minSelectionCount = candidates.reduce((min, candidate) => Math.min(min, candidate.selectionCount), Infinity);
+                const viableCandidates = candidates.filter(candidate => candidate.selectionCount === minSelectionCount);
+                const winner = viableCandidates[Math.floor(Math.random() * viableCandidates.length)];
+                winner.selectionCount++;
+                return winner;
+            },
+
+            // --- EDITOR LOGIC ---
+            addMeal(e) {
+                e.preventDefault();
+                const input = document.getElementById('new-meal-name');
+                const name = input.value.trim();
+                if (!name) return;
+
+                const newId = this.generateUUID();
+                this.data.meals.push({
+                    id: newId,
+                    name: name,
+                    isPizza: false,
+                    isHome: false, // New property for home-only meals
+                    isLake: false,
+                    selectionCount: 0 // Initialize selectionCount to 0
+                });
+                input.value = "";
+                this.saveMeals();
+
+                // Scroll into view
+                setTimeout(() => {
+                    const el = document.getElementById(`meal-${newId}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            },
+
+            deleteMeal(id) {
+                if (!confirm("Delete this meal?")) return;
+                this.data.meals = this.data.meals.filter(m => m.id !== id);
+                this.saveMeals();
+            },
+
+            toggleAttribute(id, attr) {
+                const meal = this.data.meals.find(m => m.id === id);
+                if (meal) {
+                    meal[attr] = !meal[attr];
+                    this.saveMeals();
+                }
+            },
+
+            startEdit(id) {
+                this.data.editingId = id;
+                this.renderMealList();
+                setTimeout(() => {
+                    const input = document.getElementById(`edit-input-${id}`);
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }, 50);
+            },
+
+            saveEdit(id) {
+                const input = document.getElementById(`edit-input-${id}`);
+                const newName = input.value.trim();
+                if (newName) {
+                    const meal = this.data.meals.find(m => m.id === id);
+                    if (meal) {
+                        meal.name = newName;
+                        this.saveMeals();
+                    }
+                }
+                this.data.editingId = null;
+                this.renderMealList();
+            },
+
+            cancelEdit() {
+                this.data.editingId = null;
+                this.renderMealList();
+            },
+
+            handleEditKey(e, id) {
+                if (e.key === 'Enter') this.saveEdit(id);
+                if (e.key === 'Escape') this.cancelEdit();
+            },
+
+            renderMealList() {
+                const list = document.getElementById('meal-list');
+                list.innerHTML = "";
+                this.updateConnStatus();
+
+                // Sort alphabetical
+                const sorted = [...this.data.meals].sort((a, b) => a.name.localeCompare(b.name));
+
+                sorted.forEach(meal => {
+                    const div = document.createElement('div');
+                    div.id = `meal-${meal.id}`;
+                    div.className = "glass-panel";
+                    div.style.cssText = "margin-bottom: 10px; padding: 12px; display: flex; align-items: center; justify-content: space-between;";
+
+                    const isEditing = this.data.editingId === meal.id;
+
+                    if (isEditing) {
+                        div.innerHTML = `
+                            <div style="flex: 1; display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="edit-input-${meal.id}" value="${meal.name}"
+                                    onkeydown="app.handleEditKey(event, '${meal.id}')"
+                                    style="padding: 8px; font-size: 1rem;">
+                                <button class="btn-icon" style="color: var(--secondary-color)" onclick="app.saveEdit('${meal.id}')">
+                                    <i data-lucide="check" width="18"></i>
+                                </button>
+                                <button class="btn-icon" style="color: var(--danger-color)" onclick="app.cancelEdit()">
+                                    <i data-lucide="x" width="18"></i>
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        div.innerHTML = `
+                            <div style="flex: 1">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="font-weight: 600; margin-bottom: 8px; cursor: pointer;" onclick="app.startEdit('${meal.id}')" title="Click to edit name">${meal.name}</div>
+                                </div>
+                                <div class="toggle-group">
+                                    <button class="toggle-btn ${meal.isPizza ? 'active' : ''}" onclick="app.toggleAttribute('${meal.id}', 'isPizza')">
+                                        <i data-lucide="pizza" width="14"></i>
+                                    </button>
+                                    <button class="toggle-btn ${meal.isHome ? 'active' : ''}" onclick="app.toggleAttribute('${meal.id}', 'isHome')"> <!-- New toggle for isHome -->
+                                        <i data-lucide="home" width="14"></i> <!-- Icon for home -->
+                                    </button>
+                                    <button class="toggle-btn ${meal.isLake ? 'active' : ''}" onclick="app.toggleAttribute('${meal.id}', 'isLake')">
+                                        <i data-lucide="waves" width="14"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 4px; flex-direction: column;">
+                                <button class="btn-icon" onclick="app.startEdit('${meal.id}')">
+                                    <i data-lucide="pencil" width="16"></i>
+                                </button>
+                                <button class="btn-icon" style="color: var(--danger-color)" onclick="app.deleteMeal('${meal.id}')">
+                                     <i data-lucide="trash-2" width="16"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                    list.appendChild(div);
+                });
+                lucide.createIcons();
+            }
+        };
+
+        // Start
+        app.init();
+    </script>
+</body>
+
+</html>

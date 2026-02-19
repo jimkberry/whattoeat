@@ -1,0 +1,38 @@
+
+- Create a local web app to help a user to choose what to have for dinner.
+
+- Only one source file.
+
+- local Vanilla.JS - no server-side code or frameworks.
+
+- Should work well on a desktop or phone display. Phone-first, tho.
+
+- Do not explain the code.
+- Do not ask questions.
+- If something is ambiguous, make a reasonable assumption and proceed.
+
+
+## Main screen 
+
+# Components:
+- The dynamic display of the selected meal, along with a control to start the process. Think slot machine
+
+Some On/Off toggles to control the spin:
+- Need ingredients: in a separate edit-meal page a user is able to choose whether the necessary ingrediants are present.
+- Pizza: are we just selecting pizza? In the meal editor there is an "is pizza" toggle
+- Lake:  are we at the Lake? In the meal editor there is a "For Lake" toggle to show that a meal is good at the lake
+
+- A button to bring up a (not needed yet) "edit meals" dialog.
+  
+## Edit meals
+
+- Basically a scrolling list with "add", "delete", "edit", and "done" buttons
+
+- Each list item contains:
+  - Meal Name (string)
+  - Ingredents on-hand (bool)
+  - IsPizza? (bool)
+  - ForLake? (bool)
+  
+The boolean items are independent of one another.
+  
