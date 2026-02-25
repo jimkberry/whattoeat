@@ -170,6 +170,24 @@
             color: var(--primary-glow);
         }
 
+        .spinner-item {
+            display: flex;
+            /*border: 2px solid red;*/
+            font-size: 2.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            text-shadow: "none";
+            /*padding: 2em; */
+            height: 3em;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .winner {
+            color: var(--primary-glow);
+            text-shadow:  0 0 20px rgba(139, 92, 246, 0.5);
+        }
+
         .hidden {
             display: none !important;
         }
@@ -200,6 +218,7 @@
         .mb-2 {
             margin-bottom: 20px;
         }
+
     </style>
 </head>
 
@@ -234,7 +253,7 @@
                     <div id="slot-candidates" class="hidden"></div> <!-- New div for spinning candidates -->
                     <h1 id="slot-text"
                         style="font-size: 2.5rem; text-align: center; color: var(--primary-glow); text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);">
-                        ???</h1>
+                    </h1>
                 </div>
 
                 <!-- Filters -->
@@ -397,9 +416,16 @@
             },
 
             spin() {
+
+                // TASKS:
+                //  - Create candidates list
+                //      - Select winner
+                //      - create empty list
+
+
                 if (this.data.isSpinning) return;
 
-                const candidates = this.data.meals.filter(m => {
+                let candidates = this.data.meals.filter(m => {
                     if (this.data.filters.pizza != m.isPizza) return false;
                     if (this.data.filters.lake && !m.isLake) return false;
                     if (!this.data.filters.lake && !m.isHome) return false;
@@ -416,51 +442,71 @@
                 const btn = document.getElementById('btn-spin');
                 btn.disabled = true;
                 btn.innerText = "SPINNING...";
-                slotText.style.color = "var(--text-muted)";
-                slotText.style.textShadow = "none";
+                //slotText.style.color = "var(--text-muted)";
+                //slotText.style.textShadow = "none";
 
                 // Create the spinning candidates div
                 const slotCandidates = document.getElementById('slot-candidates');
                 slotCandidates.innerHTML = '';
                 slotCandidates.classList.remove('hidden');
 
-                // Add repeated first candidate name at the end to create a loop effect
-                const candsPlus1 = [...candidates,  candidates[0]];
+                winner = this.selectWinner(candidates);
+                console.log('Winner: ' + winner.name);
 
-                candsPlus1.forEach(candidate => {
+                let spinCands = [winner];
+                candidates = candidates.filter( c => c != winner);
+                while (candidates.length > 0) {
+                    let c = candidates[ Math.floor(Math.random() * candidates.length) ];
+                    if (candidates.length & 1)
+                        spinCands.unshift(c);
+                    else
+                        spinCands.push(c);
+                    candidates = candidates.filter( cand => cand != c);
+                }
+                // Add repeated first candidate name at the end to create a loop effect
+                spinCands = [...spinCands,  spinCands[0]];
+
+                spinCands.forEach(candidate => {
                     console.log(candidate.name);
                     const h1 = document.createElement('h1');
                     h1.innerText = candidate.name;
-                    h1.style = "font-size: 2.5rem; text-align: center; color: var(--primary-glow); text-shadow: 0 0 20px rgba(139, 92, 246, 0.5); margin: 2rem;"
+                    h1.className = "spinner-item";
                     slotCandidates.appendChild(h1);
                 });
 
                 // Animate the spinning effect
-                let startY = slotCandidates.clientHeight/2 - slotCandidates.firstChild.clientHeight;
+                let startY = slotCandidates.clientHeight/2 - slotCandidates.firstChild.clientHeight/2;
                 let offset = 0;
                 let dy = -10; // Adjust this value to control the speed of the spin
-                let laps = 3;
+                let msToGo = 3000; // Adjust this value to control the duration of the spin
+                let lastLap = false;
+                const winOffset = -spinCands.indexOf(winner) * slotCandidates.firstChild.clientHeight;
+
                 const interval = setInterval(() => {
+                    msToGo -= 10;
                     offset += dy;
                     slotCandidates.style.transform = `translateY(${startY+offset}px)`;
-                    if (offset <= - (slotCandidates.clientHeight - slotCandidates.firstChild.clientHeight*2)) {
-                        laps--;
-                        offset = 0;
+                    if (offset <= - (slotCandidates.clientHeight - slotCandidates.firstChild.clientHeight)) {
+                        offset = 0; //reset to bottom
+                        if (msToGo < 0)
+                            lastLap = true;
                     }
 
-                    if (laps < 0) {
+                    if ( lastLap && offset <= winOffset) {
                         clearInterval(interval);
                         this.data.isSpinning = false;
 
                         btn.disabled = false;
                         btn.innerText = "SPIN AGAIN";
-                        slotText.style.color = "var(--primary-glow)";
-                        slotText.style.textShadow = "0 0 20px rgba(139, 92, 246, 0.5)";
+
+                        winnerSlot = slotCandidates.children[spinCands.indexOf(winner)];
+                        winnerSlot.style.color = "var(--primary-glow)";
+                        winnerSlot.style.textShadow = "0 0 20px rgba(139, 92, 246, 0.5)";
 
                         // Select the winner and display it
-                        const winnerIndex = Math.floor((slotCandidates.clientHeight / 2) / 20); // Adjust this value based on your slot machine height
-                        const winner = candidates[winnerIndex];
-                        slotText.innerText = winner.name;
+                        // const winnerIndex = Math.floor((slotCandidates.clientHeight / 2) / 20); // Adjust this value based on your slot machine height
+                        // const winner = candidates[winnerIndex];
+                        // slotText.innerText = winner.name;
                     }
                 }, 10);
             },
