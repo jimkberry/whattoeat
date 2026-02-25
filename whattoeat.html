@@ -231,6 +231,7 @@
                     <div
                         style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(to top, var(--surface-color), transparent); z-index: 10">
                     </div>
+                    <div id="slot-candidates" class="hidden"></div> <!-- New div for spinning candidates -->
                     <h1 id="slot-text"
                         style="font-size: 2.5rem; text-align: center; color: var(--primary-glow); text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);">
                         ???</h1>
@@ -298,7 +299,7 @@
                 lucide.createIcons();
             },
 
-            // --- UTILS ---I
+            // --- UTILS ---
             generateUUID() {
                 if (typeof crypto !== 'undefined' && crypto.randomUUID) {
                     try { return crypto.randomUUID(); } catch (e) { }
@@ -418,22 +419,41 @@
                 slotText.style.color = "var(--text-muted)";
                 slotText.style.textShadow = "none";
 
-                let interval = setInterval(() => {
-                    const random = candidates[Math.floor(Math.random() * candidates.length)];
-                    slotText.innerText = random.name;
-                }, 50);
+                // Create the spinning candidates div
+                const slotCandidates = document.getElementById('slot-candidates');
+                slotCandidates.innerHTML = '';
+                slotCandidates.classList.remove('hidden');
 
-                setTimeout(() => {
-                    clearInterval(interval);
-                    const winner = this.selectWinner(candidates); // New method to select the winner
-                    slotText.innerText = winner.name;
-                    this.data.isSpinning = false;
+                // Add repeated first candidate name at the end to create a loop effect
+                const firstCandidate = candidates[0];
+                candidates.push(firstCandidate);
 
-                    btn.disabled = false;
-                    btn.innerText = "SPIN AGAIN";
-                    slotText.style.color = "var(--primary-glow)";
-                    slotText.style.textShadow = "0 0 20px rgba(139, 92, 246, 0.5)";
-                }, 2000);
+                candidates.forEach(candidate => {
+                    const div = document.createElement('div');
+                    div.innerText = candidate.name;
+                    slotCandidates.appendChild(div);
+                });
+
+                // Animate the spinning effect
+                let offset = 0;
+                const interval = setInterval(() => {
+                    offset -= 1; // Adjust this value to control the speed of the spin
+                    slotCandidates.style.transform = `translateY(${offset}px)`;
+                    if (offset <= -slotCandidates.clientHeight / 2) {
+                        clearInterval(interval);
+                        this.data.isSpinning = false;
+
+                        btn.disabled = false;
+                        btn.innerText = "SPIN AGAIN";
+                        slotText.style.color = "var(--primary-glow)";
+                        slotText.style.textShadow = "0 0 20px rgba(139, 92, 246, 0.5)";
+
+                        // Select the winner and display it
+                        const winnerIndex = Math.floor((slotCandidates.clientHeight / 2) / 20); // Adjust this value based on your slot machine height
+                        const winner = candidates[winnerIndex];
+                        slotText.innerText = winner.name;
+                    }
+                }, 10);
             },
 
             selectWinner(candidates) {
