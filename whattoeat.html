@@ -417,11 +417,28 @@
 
             spin() {
 
-                // TASKS:
-                //  - Create candidates list
-                //      - Select winner
-                //      - create empty list
+               // Overview: the idea here is that we create a random vertical list of all of the meals, and drag it upwards
+               // through the parent div to look like the meals are scrolling by. Some points:
 
+               // - the winner is selected first, and put near the middle of the list to prevent edge-effects
+               // - the first meal is copied and added to the end of the list to make the transition seamless.
+               // algo:
+               // - compute a y-axis base_position where the first meal is centered in the div
+               // - compute end_offset which added to base_pos is where the last meal (copy of the first) is centered
+               // - compute winner_offset which +base_position is where the winner meal is centered
+               // - set a y offset var to 0
+               // - set a last_lap boolean to false
+               // - using setinterval, loop over:
+               //   - set the div to the base position+offset
+               //   - if offset <= end_offset:
+               //     - reset offset to 0 (this is the seamless transition)
+               //     - if a preset amount of time has passed: ( typically a couple of "laps" worth)
+               //       - set last_lap flag true
+               //   - if last_lap is true:
+               //     - if the offset is <= wimmer_offset:
+               //       - clear the setInterval (end the loop)
+               //   - subtract a constant from y offset (moves the list upwards)
+               // - highlight the winner item
 
                 if (this.data.isSpinning) return;
 
@@ -475,24 +492,24 @@
                 });
 
                 // Animate the spinning effect
-                let startY = slotCandidates.clientHeight/2 - slotCandidates.firstChild.clientHeight/2;
+                const frame_ms = 16.7; // 60Hz
+                const base_y = slotCandidates.clientHeight/2 - slotCandidates.firstChild.clientHeight/2; // first item is centered
+                const end_offset = -(slotCandidates.clientHeight - slotCandidates.firstChild.clientHeight);
+                const winner_offset = -spinCands.indexOf(winner) * slotCandidates.firstChild.clientHeight;
+                let pix_per_ms = -1; // Adjust this value to control the speed of the spin
                 let offset = 0;
-                let dy = -10; // Adjust this value to control the speed of the spin
-                let msToGo = 3000; // Adjust this value to control the duration of the spin
+                let msToGo = 2500; // Adjust this value to control the duration of the spin
                 let lastLap = false;
-                const winOffset = -spinCands.indexOf(winner) * slotCandidates.firstChild.clientHeight;
 
                 const interval = setInterval(() => {
-                    msToGo -= 10;
-                    offset += dy;
-                    slotCandidates.style.transform = `translateY(${startY+offset}px)`;
-                    if (offset <= - (slotCandidates.clientHeight - slotCandidates.firstChild.clientHeight)) {
+                    slotCandidates.style.transform = `translateY(${base_y+offset}px)`;
+                    if (offset <= end_offset) {
                         offset = 0; //reset to bottom
                         if (msToGo < 0)
                             lastLap = true;
                     }
 
-                    if ( lastLap && offset <= winOffset) {
+                    if ( lastLap && offset <= winner_offset) {
                         clearInterval(interval);
                         this.data.isSpinning = false;
 
@@ -502,13 +519,10 @@
                         winnerSlot = slotCandidates.children[spinCands.indexOf(winner)];
                         winnerSlot.style.color = "var(--primary-glow)";
                         winnerSlot.style.textShadow = "0 0 20px rgba(139, 92, 246, 0.5)";
-
-                        // Select the winner and display it
-                        // const winnerIndex = Math.floor((slotCandidates.clientHeight / 2) / 20); // Adjust this value based on your slot machine height
-                        // const winner = candidates[winnerIndex];
-                        // slotText.innerText = winner.name;
                     }
-                }, 10);
+                    msToGo -= frame_ms;
+                    offset += pix_per_ms * frame_ms;
+                }, frame_ms);
             },
 
             selectWinner(candidates) {
