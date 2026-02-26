@@ -451,7 +451,7 @@
                 slotCandidates.classList.remove('hidden');
 
                 winner = this.selectWinner(candidates);
-                console.log('Winner: ' + winner.name);
+                //console.log('Winner: ' + winner.name);
 
                 let spinCands = [winner];
                 candidates = candidates.filter( c => c != winner);
@@ -514,7 +514,7 @@
             selectWinner(candidates) {
                 const minSelectionCount = candidates.reduce((min, candidate) => Math.min(min, candidate.selectionCount), Infinity);
                 const viableCandidates = candidates.filter(candidate => candidate.selectionCount === minSelectionCount);
-                console.info('Choices: ' + viableCandidates.length + ' / ' + candidates.length);
+                //console.info('Choices: ' + viableCandidates.length + ' / ' + candidates.length);
                 const winner = viableCandidates[Math.floor(Math.random() * viableCandidates.length)];
                 winner.selectionCount++;
                 return winner;

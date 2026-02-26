@@ -1,0 +1,6 @@
+- Only one source file.
+- local Vanilla.JS - no server-side code or frameworks.
+- Should work well on a desktop or phone display. Phone-first, tho.
+- Do not explain the code.
+- Do not ask questions.
+- If something is ambiguous, make a reasonable assumption and proceed.
