@@ -198,7 +198,7 @@ const app = {
         const winner_offset = -spinCands.indexOf(winner) * slotCandidates.firstChild.clientHeight;
         let pix_per_ms = -1; // Adjust this value to control the speed of the spin
         let offset = 0;
-        let msToGo = 2500; // Adjust this value to control the duration of the spin
+        let msToGo = 1500; // Adjust this value to control the duration of the spin
         let lastLap = false;
 
         const interval = setInterval(() => {
